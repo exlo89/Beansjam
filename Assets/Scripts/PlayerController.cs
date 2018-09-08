@@ -3,99 +3,130 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
-public class PlayerController : MonoBehaviour {
+public class PlayerController : MonoBehaviour
+{
+    [HideInInspector] public bool FacingRight = true;
+    [HideInInspector] public bool Jump;
+    [HideInInspector] public bool DoubleJump;
 
-	[HideInInspector] public bool facingRight = true;
-	[HideInInspector] public bool jump = false;
-	[HideInInspector] public bool doublejump = false;
-	public float moveForce = 365f;
-	public float maxSpeed = 5f;
-	public float jumpForce = 1000f;
-	public float doubleJumpFactor = 1;
-	public LayerMask layerMask;
+    [Header("Basic Settings")] public float DoubleJumpFactor = 1;
+    public LayerMask LayerMask;
+    public bool AddForceMovement;
 
+    [Header("Settings For 'AddForce' Movement")]
+    public float MoveForce = 365f;
 
-	private bool grounded = false;
-	private Animator anim;
-	private Rigidbody2D rb2d;
+    public float MaxSpeed = 5f;
+    public float JumpForce = 1000f;
 
-
-	// Use this for initialization
-	void Awake () 
-	{
-		//anim = GetComponent<Animator>();
-		rb2d = GetComponent<Rigidbody2D>();
-	}
-	
-	bool IsGrounded() {
-		Vector2 position = transform.position;
-		Vector2 direction = Vector2.down;
-		float distance = 1.0f;
-
-		RaycastHit2D hit = Physics2D.Raycast(position, direction, distance, layerMask);
-		if (hit.collider != null)
-		{
-			doublejump = false;
-			return true;
-		}
-
-		return false;
-	}
-    
-	// Update is called once per frame
-	void Update () 
-	{
-		if (Input.GetButtonDown("Jump") && IsGrounded())
-		{
-			jump = true;
-		}
-		if (Input.GetButtonDown("Jump") && !IsGrounded() && !doublejump)
-		{
-			doublejump = true;
-			rb2d.AddForce(new Vector2(0f, jumpForce * doubleJumpFactor));
-		}
-	}
-
-	void FixedUpdate()
-	{
-		float h = Input.GetAxis("Horizontal");
-
-		//anim.SetFloat("Speed", Mathf.Abs(h));
-
-		if (h * rb2d.velocity.x < maxSpeed)
-		{
-			rb2d.AddForce(Vector2.right * h * moveForce);			
-		}
-
-		if (Mathf.Abs(rb2d.velocity.x) > maxSpeed)
-		{
-			rb2d.velocity = new Vector2(Mathf.Sign (rb2d.velocity.x) * maxSpeed, rb2d.velocity.y);			
-		}
-
-		//animation
-		if (h > 0 && !facingRight)
-		{
-			Flip ();			
-		} else if (h < 0 && facingRight)
-		{
-			Flip ();			
-		}
+    [Header("Settings For 'Velocity' Movement")]
+    public float Speed = 5;
 
 
-		if (jump)
-		{
-			//anim.SetTrigger("Jump");
-			rb2d.AddForce(new Vector2(0f, jumpForce));
-			jump = false;
-		}
-	}
+    private Rigidbody2D _rb2D;
 
 
-	void Flip()
-	{
-		facingRight = !facingRight;
-		Vector3 theScale = transform.localScale;
-		theScale.x *= -1;
-		transform.localScale = theScale;
-	}
+    // Use this for initialization
+    void Awake()
+    {
+        _rb2D = GetComponent<Rigidbody2D>();
+    }
+
+    bool IsGrounded()
+    {
+        Vector2 position = transform.position;
+        Vector2 direction = Vector2.down;
+        float distance = 1.0f;
+
+        RaycastHit2D hit = Physics2D.Raycast(position, direction, distance, LayerMask);
+        if (hit.collider != null)
+        {
+            DoubleJump = false;
+            return true;
+        }
+
+        return false;
+    }
+
+    float CalculateJumpForce(float gravityStrength, float jumpHeight)
+    {
+        //h = v^2/2g
+        //2gh = v^2
+        //sqrt(2gh) = v
+        return Mathf.Sqrt(2 * gravityStrength * jumpHeight);
+    }
+
+    // Update is called once per frame
+
+    void Update()
+    {
+        //Debug.Log(CalculateJumpForce(Physics2D.gravity.magnitude,5f));
+        //Debug.Log(JumpForce);
+
+        //first jump
+        if (Input.GetButtonDown("Jump") && IsGrounded())
+        {
+            //=================add force movement================================            
+            if (AddForceMovement)
+            {
+                Jump = true;
+            }
+            else
+                //=================velocity movement================================
+            {
+                //todo
+            }
+        }
+
+        //second jump
+        if (Input.GetButtonDown("Jump") && !IsGrounded() && !DoubleJump)
+        {
+            //=================add force movement================================            
+            if (AddForceMovement)
+            {
+                DoubleJump = true;
+                _rb2D.AddForce(new Vector2(0f, JumpForce * DoubleJumpFactor));
+            }
+            else
+                //=================velocity movement================================            
+            {
+                //todo
+            }
+        }
+    }
+
+    void FixedUpdate()
+    {
+        float horizontalAxis = Input.GetAxis("Horizontal");
+
+        //=================add force movement================================
+
+        if (AddForceMovement)
+        {
+            Debug.Log("addForce movement");
+            if (horizontalAxis * _rb2D.velocity.x < MaxSpeed)
+            {
+                _rb2D.AddForce(Vector2.right * horizontalAxis * MoveForce);
+            }
+
+            if (Mathf.Abs(_rb2D.velocity.x) > MaxSpeed)
+            {
+                _rb2D.velocity = new Vector2(Mathf.Sign(_rb2D.velocity.x) * MaxSpeed, _rb2D.velocity.y);
+            }
+
+
+            if (Jump)
+            {
+                _rb2D.AddForce(new Vector2(0f, JumpForce));
+                Jump = false;
+            }
+        }
+        else
+            //=================velocity movement================================
+        {
+            Debug.Log("velocity movement");
+            _rb2D.velocity =
+                Vector2.right * horizontalAxis * Speed * Time.fixedDeltaTime;
+        }
+    }
 }
