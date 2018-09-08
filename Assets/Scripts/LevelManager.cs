@@ -8,13 +8,13 @@ public class LevelManager : MonoBehaviour {
 
     [Header("Level Ladezeit")]                                          
     [Tooltip("Bei 0 kein automatisches laden. Zeit in Sekunden")]
-    public float autoLoadNextLevelAfter;
+    public float AutoLoadNextLevelAfter;
     
     void Start() {
-        if(autoLoadNextLevelAfter == 0) {
+        if(AutoLoadNextLevelAfter == 0) {
             Debug.Log("Level auto load disable");
         } else {
-            Invoke("LoadNextLevel", autoLoadNextLevelAfter);
+            Invoke("LoadNextLevel", AutoLoadNextLevelAfter);
         }
     }
 	public void LoadLevel(string name){
