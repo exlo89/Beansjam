@@ -6,25 +6,29 @@ using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
-    [Header("Basic Settings")] public float DoubleJumpFactor = 1;
-    public LayerMask LayerMask;
-    public bool AddForceMovement;
+    [Header("Basic Settings")] public LayerMask LayerMask;
     public Text DeathText;
     public float DeathZone;
 
-    [Header("Settings For 'AddForce' Movement")]
+    [Header("Settings For 'Movement' Movement")]
     public float MoveForce = 365f;
 
     public float MaxSpeed = 5f;
-    public float JumpForce = 1000f;
-
-    [Header("Settings For 'Velocity' Movement")]
     public float Speed = 5;
+
+    [Header("Settings For 'Jumping' Movement")]
+    public float JumpForce = 300f;
+
+    public float DoubleJumpFactor = 1;
+    public float SphereForce = 2;
+
+    [HideInInspector] public bool WinGame =true;
 
     private bool _jump;
     private bool _firstJump;
     private bool _secondJump;
     private bool _sphere;
+    private bool _canMove = true;
 
     private int _jumpCounter;
     private Rigidbody2D _rb2D;
@@ -74,8 +78,17 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         IsGrounded();
-        Debug.Log(_jumpCounter);
-        
+
+        if (Input.GetButtonDown("Jump") && _canMove)
+        {
+            if (_jumpCounter < 2)
+            {
+                _jump = true;
+                _jumpCounter++;
+            }
+        }
+
+        /*
 
         if (_jumpCounter < 2)
         {
@@ -85,7 +98,7 @@ public class PlayerController : MonoBehaviour
                 _jumpCounter++;
                 _jump = true;
             }
-    
+
             //second jump
             if (Input.GetButtonDown("Jump") && _jumpCounter == 1 && !_jump)
             {
@@ -93,6 +106,7 @@ public class PlayerController : MonoBehaviour
                 _jumpCounter++;
             }
         }
+*/
 
 
         if (transform.position.y < -DeathZone)
@@ -131,23 +145,46 @@ public class PlayerController : MonoBehaviour
         }
 */
     }
-    
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.name == "Top")
+        {
+            WinGame = true;
+            StartCoroutine(Win());
+        }
+    }
+
+    IEnumerator Win()
+    {
+        DeathText.text = "YOU WIN";
+        yield return new WaitForSeconds(1);
+        _rb2D.constraints = RigidbodyConstraints2D.FreezeAll;
+        yield return new WaitForSeconds(2);
+        SceneManager.LoadScene("02_EndWin");
+    }
+
     IEnumerator Death()
     {
+        _canMove = false;
         DeathText.text = "YOU DIED";
-        yield return new WaitForSeconds(5);
-        SceneManager.LoadScene ("03_EndLose");
+        yield return new WaitForSeconds(3);
+        SceneManager.LoadScene("03_EndLose");
     }
 
     void FixedUpdate()
     {
         //===============movement left right====================================
-        float horizontalAxis = Input.GetAxis("Horizontal");
-
-
-        if (horizontalAxis * _rb2D.velocity.x < MaxSpeed)
+        if (_canMove)
         {
-            _rb2D.AddForce(Vector2.right * horizontalAxis * MoveForce);
+            float horizontalAxis = Input.GetAxis("Horizontal");
+
+
+            if (horizontalAxis * _rb2D.velocity.x < MaxSpeed)
+            {
+                //_rb2D.velocity = Vector2.right * horizontalAxis * MoveForce;
+                _rb2D.AddForce(Vector2.right * horizontalAxis * 20000 * MoveForce);
+            }
         }
 
 
@@ -160,15 +197,19 @@ public class PlayerController : MonoBehaviour
         //=====================movement jump====================================
         if (_jump)
         {
-            _rb2D.AddForce(new Vector2(0f, JumpForce));
+            float jumpFactor = _jumpCounter == 2 ? DoubleJumpFactor : 1;
+            _rb2D.velocity = Vector2.up * JumpForce * jumpFactor * Speed * Time.fixedDeltaTime;
+//            _rb2D.AddForce(new Vector2(0f, JumpForce));
             _jump = false;
         }
+/*
 
         if (_secondJump)
         {
-            _rb2D.AddForce(new Vector2(0f, JumpForce * DoubleJumpFactor));
+            _rb2D.velocity = Vector2.up * JumpForce * DoubleJumpFactor * Speed * Time.fixedDeltaTime;
+//            _rb2D.AddForce(new Vector2(0f, JumpForce * DoubleJumpFactor));
             _secondJump = false;
-        }
+        }*/
 
 //_rb2D.velocity = Vector2.right * horizontalAxis * Speed * Time.fixedDeltaTime;
     }
@@ -206,7 +247,9 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetButtonDown("Jump"))
         {
-            _rb2D.AddForce(new Vector2(0f, JumpForce));
+            _rb2D.velocity = Vector2.up * JumpForce * SphereForce * Speed * Time.fixedDeltaTime;
+//            _rb2D.velocity = new Vector2(0f, JumpForce);
+//            _rb2D.AddForce(new Vector2(0f, JumpForce));
             _jumpCounter = 0;
         }
 

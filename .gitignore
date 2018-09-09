@@ -53,3 +53,6 @@ _UpgradeReport_Files/
 Thumbs.db
 Desktop.ini
 .DS_Store
+Assets/_Scenes/01_Game.unity
+Assets/Prefab/Stone01.prefab
+Assets/Prefab/Stone02.prefab

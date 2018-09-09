@@ -10,22 +10,33 @@ public class LevelGenerator : MonoBehaviour
     [Range(1, 9)] public int SpawnLevelSize = 5;
     [Range(-4, 4)] public int Offset;
     [Range(0, 1)] public float[] Likelihood;
+    public GameObject FinalLevelBlock;
+    public GameObject Ground;
+    public GameObject Player;
 
     public int BlockHeight = 10;
 
     private GameObject[] _currentBlocks;
+    private GameObject _ground;
     private int _borderBelow;
     private int _topOffset;
     private int _blockCounter;
+    private bool _lastBlock;
+    private PlayerController _playerScript;
 
     // Use this for initialization
     void Start()
     {
+        _playerScript = Player.GetComponent<PlayerController>();
+        
         _borderBelow = (int) Mathf.Round((SpawnLevelSize - Offset) * 0.5F) * BlockHeight;
         _topOffset = SpawnLevelSize % 2 == 0 ? 1 : 0;
-
         _blockCounter = SpawnLevelSize;
 
+        //spawn ground
+        _ground = Instantiate(Ground, Vector3.down * 40, transform.rotation);
+
+        //spawn blocks
         _currentBlocks = new GameObject[SpawnLevelSize];
         for (int i = 0; i < SpawnLevelSize; i++)
         {
@@ -40,42 +51,61 @@ public class LevelGenerator : MonoBehaviour
     {
         float step = LevelSpeed * Time.deltaTime;
 
-        if (_blockCounter >= MaxGeneratedBlocks)
+        Debug.Log(_playerScript.WinGame);
+        if (!_playerScript.WinGame)
         {
-            Debug.Log("finished game");
-        }
-
-        for (int i = 0; i < _currentBlocks.Length; i++)
-        {
-            if (_currentBlocks[i] == null)
+            for (int i = 0; i < _currentBlocks.Length; i++)
             {
-                continue;
-            }
-
-            if (_currentBlocks[i].transform.position.y < -_borderBelow - BlockHeight)
-            {
-                Destroy(_currentBlocks[i]);
-                Debug.Log("=============================================");
-                int radommNumber = calculateRandomNumber();
-
-                _blockCounter++;
-
-                if (_blockCounter < MaxGeneratedBlocks)
+                if (_currentBlocks[i] == null)
                 {
-                    _currentBlocks[i] = Instantiate(LevelBlocks[radommNumber],
-                        transform.position + Vector3.up * _borderBelow + Vector3.up * _topOffset * -BlockHeight,
-                        transform.rotation);
+                    continue;
+                }
+
+                if (_currentBlocks[i].transform.position.y < -_borderBelow - BlockHeight && !_lastBlock)
+                {
+                    Destroy(_currentBlocks[i]);
+                    int randomNumber = CalculateRandomNumber();
+
+                    _blockCounter++;
+
+                    if (_blockCounter < MaxGeneratedBlocks)
+                    {
+                        _currentBlocks[i] = Instantiate(LevelBlocks[randomNumber],
+                            transform.position + Vector3.up * _borderBelow + Vector3.up * _topOffset * -BlockHeight,
+                            transform.rotation);
+                    }
+                    else
+                    {
+                        _lastBlock = true;
+                        _currentBlocks[i] = Instantiate(FinalLevelBlock,
+                            transform.position + Vector3.up * _borderBelow + Vector3.up * _topOffset * -BlockHeight,
+                            transform.rotation);
+                    }
+                }
+                else
+                {
+                    _currentBlocks[i].transform.position = Vector3.MoveTowards(_currentBlocks[i].transform.position,
+                        _currentBlocks[i].transform.position + Vector3.down, step);
                 }
             }
-            else
+
+
+            if (_ground != null)
             {
-                _currentBlocks[i].transform.position = Vector3.MoveTowards(_currentBlocks[i].transform.position,
-                    _currentBlocks[i].transform.position + Vector3.down, step);
+                if (_ground.transform.position.y > -60)
+                {
+                    _ground.transform.position = Vector3.MoveTowards(_ground.transform.position,
+                        _ground.transform.position + Vector3.down, step);
+                }
+                else
+                {
+                    Destroy(_ground);
+                }
             }
         }
     }
 
-    private int calculateRandomNumber()
+    private int CalculateRandomNumber()
     {
         float tempRdm = Random.value; //0.1
         for (int i = 0; i < LevelBlocks.Length; i++)
@@ -86,6 +116,6 @@ public class LevelGenerator : MonoBehaviour
             }
         }
 
-        return LevelBlocks.Length-1;
+        return LevelBlocks.Length - 1;
     }
 }
