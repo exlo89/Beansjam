@@ -33,27 +33,11 @@ public class PlayerController : MonoBehaviour
     private int _jumpCounter;
     private Rigidbody2D _rb2D;
 
-    //=======================================================
-    //=======================================================
-    //=======================================================
-
-    public Material[] Material;
-    public float StartDashTime;
-    public float DashSpeed;
-    public static bool Dashing;
-
-    private Rigidbody2D _player;
-    private float _dashTime;
-    private bool _canDash;
-    private float _xTrans;
 
     // Use this for initialization
     void Awake()
     {
         DeathText.text = "";
-        _player = GetComponent<Rigidbody2D>();
-        _dashTime = StartDashTime;
-        _canDash = false;
         _rb2D = GetComponent<Rigidbody2D>();
     }
 
@@ -88,62 +72,10 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        /*
-
-        if (_jumpCounter < 2)
-        {
-            //first jump
-            if (Input.GetButtonDown("Jump") && _jumpCounter == 0)
-            {
-                _jumpCounter++;
-                _jump = true;
-            }
-
-            //second jump
-            if (Input.GetButtonDown("Jump") && _jumpCounter == 1 && !_jump)
-            {
-                _secondJump = true;
-                _jumpCounter++;
-            }
-        }
-*/
-
-
         if (transform.position.y < -DeathZone)
         {
             StartCoroutine(Death());
         }
-
-        //==============================================================
-        //==============================================================
-
-        /*
-        // actual dash move
-        if (Dashing == false && _canDash == true)
-        {
-            if (Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.RightControl))
-            {
-                Dashing = true;
-            }
-        }
-        else
-        {
-            if (_dashTime <= 0)
-            {
-                Dashing = false;
-                _dashTime = StartDashTime;
-            }
-            else
-            {
-                _dashTime -= Time.deltaTime;
-                if (Dashing == true)
-                {
-                    _player.velocity = Vector2.up * DashSpeed;
-                    //PlayerController.numOfJumps = 2;
-                }
-            }
-        }
-*/
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -172,6 +104,7 @@ public class PlayerController : MonoBehaviour
         SceneManager.LoadScene("03_EndLose");
     }
 
+    
     void FixedUpdate()
     {
         //===============movement left right====================================
@@ -179,6 +112,15 @@ public class PlayerController : MonoBehaviour
         {
             float horizontalAxis = Input.GetAxis("Horizontal");
 
+            if(horizontalAxis > 0)
+            {
+                GetComponent<SpriteRenderer>().flipX = true;
+            }
+
+            if(horizontalAxis < 0)
+            {
+                GetComponent<SpriteRenderer>().flipX = false;
+            }
 
             if (horizontalAxis * _rb2D.velocity.x < MaxSpeed)
             {
@@ -199,48 +141,9 @@ public class PlayerController : MonoBehaviour
         {
             float jumpFactor = _jumpCounter == 2 ? DoubleJumpFactor : 1;
             _rb2D.velocity = Vector2.up * JumpForce * jumpFactor * Speed * Time.fixedDeltaTime;
-//            _rb2D.AddForce(new Vector2(0f, JumpForce));
             _jump = false;
         }
-/*
-
-        if (_secondJump)
-        {
-            _rb2D.velocity = Vector2.up * JumpForce * DoubleJumpFactor * Speed * Time.fixedDeltaTime;
-//            _rb2D.AddForce(new Vector2(0f, JumpForce * DoubleJumpFactor));
-            _secondJump = false;
-        }*/
-
-//_rb2D.velocity = Vector2.right * horizontalAxis * Speed * Time.fixedDeltaTime;
     }
-
-    //========================================================================================
-    //========================================================================================
-    //========================================================================================
-
-
-/*
-
-
-    // is player inside of dash-sphere?
-    public void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.gameObject.CompareTag("dashSphere"))
-        {
-            _canDash = true;
-            other.gameObject.GetComponent<Renderer>().material = Material[1];
-            Debug.Log("Can dash: " + _canDash);
-        }
-
-        if (other.gameObject.CompareTag("smallSphere"))
-        {
-            _canDash = true;
-            //dashSpeed = dashSpeed + (dashSpeed * 0.5f);
-            other.gameObject.GetComponent<Renderer>().material = Material[3];
-            Debug.Log("Can dash: " + _canDash);
-        }
-    }
-*/
 
     // is player inside of dash-sphere?
     public void OnTriggerStay2D(Collider2D other)
@@ -248,45 +151,9 @@ public class PlayerController : MonoBehaviour
         if (Input.GetButtonDown("Jump"))
         {
             _rb2D.velocity = Vector2.up * JumpForce * SphereForce * Speed * Time.fixedDeltaTime;
-//            _rb2D.velocity = new Vector2(0f, JumpForce);
-//            _rb2D.AddForce(new Vector2(0f, JumpForce));
             _jumpCounter = 0;
         }
 
-        /*
-
-        if (other.gameObject.CompareTag("dashSphere"))
-        {
-            _canDash = true;
-            other.gameObject.GetComponent<Renderer>().material = Material[1];
-            Debug.Log("Can dash: " + _canDash);
-        }
-
-        if (other.gameObject.CompareTag("smallSphere"))
-        {
-            _canDash = true;
-            //dashSpeed = dashSpeed + (dashSpeed * 0.5f);
-            other.gameObject.GetComponent<Renderer>().material = Material[3];
-            Debug.Log("Can dash: " + _canDash);
-        }*/
     }
 
-
-/*    // has player left dash-sphere?
-    public void OnTriggerExit2D(Collider2D other)
-    {
-        _sphere = true;
-        if (other.gameObject.CompareTag("dashSphere"))
-        {
-            _canDash = false;
-            other.gameObject.GetComponent<Renderer>().material = Material[0];
-            Debug.Log("Can dash: " + _canDash);
-        }
-
-        if (other.gameObject.CompareTag("smallSphere"))
-        {
-            other.gameObject.GetComponent<Renderer>().material = Material[2];
-            //dashSpeed = dashSpeed - (dashSpeed*0.5f);
-        }
-    }*/
 }

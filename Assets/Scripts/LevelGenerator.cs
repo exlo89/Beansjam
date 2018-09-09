@@ -10,6 +10,7 @@ public class LevelGenerator : MonoBehaviour
     [Range(1, 9)] public int SpawnLevelSize = 5;
     [Range(-4, 4)] public int Offset;
     [Range(0, 1)] public float[] Likelihood;
+    public bool SpawnRandom;
     public GameObject FinalLevelBlock;
     public GameObject Ground;
     public GameObject Player;
@@ -28,7 +29,7 @@ public class LevelGenerator : MonoBehaviour
     void Start()
     {
         _playerScript = Player.GetComponent<PlayerController>();
-        
+
         _borderBelow = (int) Mathf.Round((SpawnLevelSize - Offset) * 0.5F) * BlockHeight;
         _topOffset = SpawnLevelSize % 2 == 0 ? 1 : 0;
         _blockCounter = SpawnLevelSize;
@@ -51,7 +52,7 @@ public class LevelGenerator : MonoBehaviour
     {
         float step = LevelSpeed * Time.deltaTime;
 
-        Debug.Log(_playerScript.WinGame);
+        if (!_playerScript.WinGame)
         if (!_playerScript.WinGame)
         {
             for (int i = 0; i < _currentBlocks.Length; i++)
@@ -107,6 +108,14 @@ public class LevelGenerator : MonoBehaviour
 
     private int CalculateRandomNumber()
     {
+        if (SpawnRandom)
+        {
+            Debug.Log("Random");
+            return Random.Range(0, LevelBlocks.Length - 1);
+        }
+
+        Debug.Log("not Random");
+
         float tempRdm = Random.value; //0.1
         for (int i = 0; i < LevelBlocks.Length; i++)
         {
